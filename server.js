@@ -19,7 +19,8 @@ app.get('/todos', function(req, res) {
 });
 
 app.get('/todos/:id', function(req, res) {
-    res.json(todos[id]);
+    res.send('Asking for todo with id of ' + req.params.id);
+    res.json(todos[req.params.id]);
 });
 
 app.listen(PORT, function () {
