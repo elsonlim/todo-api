@@ -37,13 +37,27 @@ app.post('/todos', function (req,res) {
     var body = _.pick(req.body, 'description', 'completed');
     body.description = body.description.trim();
     if( !_.isBoolean(body.completed) || !_.isString(body.description) || body.description.length === 0){
-        return res.status(400).send();
+		return res.status(400).send();
     }
     body.id = todoNextId++;
     todos.push(body);
     res.json(body);
 });
 
+app.delete('/todos/:id', function (req,res){
+	var todoId = parseInt(req.params.id);
+    var todoObj = _.findWhere(todos, {id: todoId});
+	
+	if(!todoObj) {
+		return res.status(400).json({
+			"error": "no todo found with that id"
+		});
+	}
+	
+	todos = _.without(todos,todoObj);
+	res.status(200).json(todoObj);
+});
+		   
 app.listen(PORT, function () {
     console.log('Express listening on port ' + PORT + '!');
 });
