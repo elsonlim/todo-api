@@ -19,18 +19,11 @@ app.get('/todos/:id', function(req, res) {
     var todoId = parseInt(req.params.id);
     var todoObj = _.findWhere(todos, {id: todoId});
     
-//    todos.forEach( function (item) {
-//       if(item.id === todoId){
-//           todoObj = item;
-//       }     
-//    });
-    
     if(todoObj){
         res.json(todoObj);
     }else {
         res.status(404).send();
     }
-   // res.send('Asking for todo with id of ' + req.params.id);
 });
 
 app.post('/todos', function (req,res) {
@@ -57,7 +50,34 @@ app.delete('/todos/:id', function (req,res){
 	todos = _.without(todos,todoObj);
 	res.status(200).json(todoObj);
 });
-		   
+
+app.put('/todos/:id', function (req, res) {
+	var todoId = parseInt(req.params.id, 10);
+	var matchTodo = _.findWhere(todos,{id: todoId});
+	var body = _.pick(req.body, 'description', 'completed');
+	var validAttributes = {}
+	
+	if (!matchTodo) {
+		return res.status(404).send();
+	}
+	
+	if(body.hasOwnProperty('completed') && _.isBoolean(body.completed)){
+		validAttributes.completed = body.completed;
+	}else if (body.hasOwnProperty('completed')) {
+		return res.status(400).send();
+	}
+	
+	if(body.hasOwnProperty('description') && _.isString(body.description)){
+		validAttributes.description = body.description;
+	}else if (body.hasOwnProperty('description')) {
+		return res.status(400).send();
+	}
+	
+	_.extend(matchTodo, validAttributes); //by referrence will override 
+	res.status(200).json(matchTodo);
+	
+});
+
 app.listen(PORT, function () {
     console.log('Express listening on port ' + PORT + '!');
 });
