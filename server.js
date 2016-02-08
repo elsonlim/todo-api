@@ -92,42 +92,82 @@ app.post('/todos', function (req,res) {
 
 app.delete('/todos/:id', function (req,res){
 	var todoId = parseInt(req.params.id);
-    var todoObj = _.findWhere(todos, {id: todoId});
 	
-	if(!todoObj) {
-		return res.status(400).json({
-			"error": "no todo found with that id"
-		});
-	}
+	db.todo.destroy({
+		where: {
+			id: todoId
+		}
+	}).then(function (rowsDeleted) {
+		if(rowsDeleted === 0 ){
+			res.status(400).json({
+				"error": "no todo found with that id"
+			});
+		} else {
+			//204 return with no content
+			res.status(204).send();
+		}
+	}, function (e) {
+		res.status(500).send();
+	});
+//    var todoObj = _.findWhere(todos, {id: todoId});
+
 	
-	todos = _.without(todos,todoObj);
-	res.status(200).json(todoObj);
+//	if(!todoObj) {
+//		return res.status(400).json({
+//			"error": "no todo found with that id"
+//		});
+//	}
+//	
+//	todos = _.without(todos,todoObj);
+//	res.status(200).json(todoObj);
 });
 
 app.put('/todos/:id', function (req, res) {
 	var todoId = parseInt(req.params.id, 10);
-	var matchTodo = _.findWhere(todos,{id: todoId});
+//	var matchTodo = _.findWhere(todos,{id: todoId});
 	var body = _.pick(req.body, 'description', 'completed');
-	var validAttributes = {}
+	var attr = {};
 	
-	if (!matchTodo) {
-		return res.status(404).send();
+	if (body.hasOwnProperty('completed')) {
+		attr.completed = body.completed;
+	}
+	if (body.hasOwnProperty('description')) {
+		attr.description = body.description;
 	}
 	
-	if(body.hasOwnProperty('completed') && _.isBoolean(body.completed)){
-		validAttributes.completed = body.completed;
-	}else if (body.hasOwnProperty('completed')) {
-		return res.status(400).send();
-	}
-	
-	if(body.hasOwnProperty('description') && _.isString(body.description)){
-		validAttributes.description = body.description;
-	}else if (body.hasOwnProperty('description')) {
-		return res.status(400).send();
-	}
-	
-	_.extend(matchTodo, validAttributes); //by referrence will override 
-	res.status(200).json(matchTodo);
+	db.todo.findById(todoId).then(function (todo) {
+		if(todo){
+			return todo.update(attr);
+		}else {
+			res.status(404).send();
+		}
+	}, function() {
+		res.status(500).send();
+	}).then(function (todo) {
+		res.json(todo.toJSON());
+	}, function (e) {
+		res.status(400).json(e);
+	});
+//	var validAttributes = {}
+//	
+//	if (!matchTodo) {
+//		return res.status(404).send();
+//	}
+//	
+//	if(body.hasOwnProperty('completed') && _.isBoolean(body.completed)){
+//		validAttributes.completed = body.completed;
+//	}else if (body.hasOwnProperty('completed')) {
+//		return res.status(400).send();
+//	}
+//	
+//	if(body.hasOwnProperty('description') && _.isString(body.description)){
+//		validAttributes.description = body.description;
+//	}else if (body.hasOwnProperty('description')) {
+//		return res.status(400).send();
+//	}
+//	
+//	_.extend(matchTodo, validAttributes); //by referrence will override 
+//	res.status(200).json(matchTodo);
 	
 });
 
