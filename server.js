@@ -144,7 +144,9 @@ app.put('/todos/:id', function (req, res) {
 	}, function() {
 		res.status(500).send();
 	}).then(function (todo) {
-		res.json(todo.toJSON());
+		if(todo){
+			res.json(todo.toJSON());
+		}
 	}, function (e) {
 		res.status(400).json(e);
 	});
