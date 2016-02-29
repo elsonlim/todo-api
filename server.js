@@ -67,7 +67,7 @@ app.get('/todos/:id', middleware.requireAutentication, function (req, res) {
 			id: todoId,
 			userId: req.user.get('id')
 		}
-	}).then(function (todo) {	//find one then find by id
+	}).then(function (todo) { //find one then find by id
 		if (!!todo) {
 			res.json(todo.toJSON())
 		} else {
@@ -108,12 +108,12 @@ app.post('/todos', middleware.requireAutentication, function (req, res) {
 	//	});
 });
 
-app.delete('/todos/:id', middleware.requireAutentication, function (req, res) { 
+app.delete('/todos/:id', middleware.requireAutentication, function (req, res) {
 	var todoId = parseInt(req.params.id);
 
 	db.todo.destroy({
 		where: {
-			id: todoId,	//check if id == req.user.id
+			id: todoId, //check if id == req.user.id
 			userId: req.user.get('id')
 		}
 	}).then(function (rowsDeleted) {
@@ -159,7 +159,7 @@ app.put('/todos/:id', middleware.requireAutentication, function (req, res) {
 			id: todoId,
 			userId: req.user.get('id')
 		}
-	}).then(function (todo) {		//findOne with whereclause where id in todo id === req.user.getid
+	}).then(function (todo) { //findOne with whereclause where id in todo id === req.user.getid
 		if (todo) {
 			return todo.update(attr);
 		} else {
@@ -215,14 +215,31 @@ app.post('/users/login', function (req, res) {
 	db.user.authenticate(body).then(function (user) {
 		var token = user.generateToken('authentication');
 
-		if (token) {
-			res.header('Auth', token).json(user.toPublicJson());
-		} else {
+		return db.token.create({
+			token: token
+		}).then(function (tokenInstance) {
+			res.header('Auth', tokenInstance.get('token')).json(user.toPublicJson());
+		}).catch(function (e) {
+			console.log(e);
 			res.status(401).send();
-		}
+		});
+
+		//		if (token) {
+		//			res.header('Auth', token).json(user.toPublicJson());
+		//		} else {
+		//			res.status(401).send();
+		//		}
 
 	}, function () {
 		res.status(401).send();
+	});
+});
+
+app.delete('/users/login', middleware.requireAutentication, function (req, res) {
+	req.token.destroy().then(function () {
+		res.status(204).send();
+	}).catch(function () {
+		res.status(500).send();
 	});
 });
 
